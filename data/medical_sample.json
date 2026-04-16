@@ -1,0 +1,37 @@
+[
+    {
+        "id": 1,
+        "title": "Aspirin Dosage for Acute Coronary Syndrome",
+        "specialty": "Cardiology",
+        "urgency": "High",
+        "content": "For acute coronary syndrome (ACS), immediately administer a loading dose of 162 to 325 mg of aspirin. It should be chewed to ensure rapid absorption, especially in emergency settings without internet access where fast guidelines are critical."
+    },
+    {
+        "id": 2,
+        "title": "Anaphylaxis Emergency Treatment",
+        "specialty": "Emergency Medicine",
+        "urgency": "High",
+        "content": "First-line treatment for an anaphylactic reaction is Epinephrine, 0.3 to 0.5 mg given intramuscularly (IM) into the anterolateral thigh. Repeat every 5 to 15 minutes if there is no clinical improvement."
+    },
+    {
+        "id": 3,
+        "title": "Pediatric Paracetamol Guidelines",
+        "specialty": "Pediatrics",
+        "urgency": "Medium",
+        "content": "For children, paracetamol (acetaminophen) dosage is 10 to 15 mg/kg per dose, every 4 to 6 hours as needed for fever or pain. Do not exceed 5 doses in 24 hours. Ensure accurate weighing using mechanical scales in remote clinics."
+    },
+    {
+        "id": 4,
+        "title": "Snakebite Antivenom Protocols",
+        "specialty": "Toxicology",
+        "urgency": "High",
+        "content": "For venomous snakebites (e.g., Viperidae), immobilize the bitten limb and do not apply a tourniquet. Administer polyvalent antivenom immediately if signs of systemic envenomation (coagulopathy, hypotension, neurotoxicity) are present."
+    },
+    {
+        "id": 5,
+        "title": "Asthma Exacerbation in Remote Clinic",
+        "specialty": "Pulmonology",
+        "urgency": "Medium",
+        "content": "For acute asthma exacerbation, start with short-acting beta-agonists (SABA) like Albuterol via nebulizer or MDI. Add oral corticosteroids (e.g., Prednisone 40-50 mg/day) early. Monitor oxygen saturation continuously."
+    }
+]

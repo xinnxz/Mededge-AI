@@ -1,0 +1,32 @@
+# Dependencies
+node_modules/
+.venv/
+__pycache__/
+*.pyc
+
+# Environment & Config
+.env
+*.env
+.DS_Store
+
+# Data (Optional: prevent uploading huge database vectors if any)
+# Di lomba biasanya kita biarkan kode saja. 
+# Tapi untuk medical_sample.json kita biarkan saja agar juri bisa melihatnya.
+
+# Vite/React Build
+dist/
+dist-ssr/
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
