@@ -3,10 +3,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Optional, Any, Dict
 from actian_vectorai import VectorAIClient, VectorParams, Distance, PointStruct, Field, FilterBuilder
-from actian_vectorai import reciprocal_rank_fusion
 from sentence_transformers import SentenceTransformer
 import logging
-import uuid
+
 import os
 
 # Konfigurasi aplikasi & model
@@ -30,8 +29,7 @@ COLLECTION_NAME = "medical_knowledge"
 EMBEDDING_MODEL_NAME = "all-MiniLM-L6-v2"
 VECTOR_SIZE = 384
 
-# Global vars for Lazy Loading (untuk mode lokal/edge agar ramah memori)
-db_client = None
+# Global vars for Lazy Loading
 model = None
 
 logger = logging.getLogger("uvicorn")
@@ -50,56 +48,51 @@ class SearchResponse(BaseModel):
 
 @app.on_event("startup")
 def startup_event():
-    global db_client, model
+    global model
     logger.info("Memulai MedEdge AI API Edge Server...")
     
     # 1. Load Embedding Model
     logger.info(f"Loading lokal model {EMBEDDING_MODEL_NAME}...")
     model = SentenceTransformer(EMBEDDING_MODEL_NAME)
     
-    # 2. Connect to VectorAI DB
-    logger.info(f"Connecting to Actian VectorAI DB at {DB_HOST}...")
+    # 2. Check Database & Setup Collection
+    logger.info(f"Checking Actian VectorAI DB at {DB_HOST}...")
     try:
-        db_client = VectorAIClient(DB_HOST)
-        # Buka root connection (harus tetap hidup selama app menyala)
-        db_client.__enter__()
-        
-        info = db_client.health_check()
-        logger.info(f"Berhasil terkoneksi ke {info['title']} v{info['version']}")
-        
-        # 3. Setup Collection jika belum ada
-        if not db_client.collections.exists(COLLECTION_NAME):
-            logger.info(f"Creating collection '{COLLECTION_NAME}'...")
-            db_client.collections.create(
-                COLLECTION_NAME,
-                vectors_config=VectorParams(size=VECTOR_SIZE, distance=Distance.Cosine)
-            )
-            logger.info("Collection berhasil dibuat.")
+        with VectorAIClient(DB_HOST) as client:
+            info = client.health_check()
+            logger.info(f"Berhasil terkoneksi ke {info['title']} v{info['version']}")
+            
+            if not client.collections.exists(COLLECTION_NAME):
+                logger.info(f"Creating collection '{COLLECTION_NAME}'...")
+                client.collections.create(
+                    COLLECTION_NAME,
+                    vectors_config=VectorParams(size=VECTOR_SIZE, distance=Distance.Cosine)
+                )
+                logger.info("Collection berhasil dibuat.")
     except Exception as e:
         logger.error(f"Gagal koneksi ke database: {e}")
-        # Jangan throw exception keras, agar FastAPI tetap bisa diakses untuk menampilkan error
         
 @app.on_event("shutdown")
 def shutdown_event():
     logger.info("Menutup Edge Server...")
-    if db_client:
-        db_client.__exit__(None, None, None)
 
 @app.get("/health")
 def health_check():
     engine_status = False
+    total_docs = 0
     try:
-        if db_client:
-            db_client.health_check()
+        with VectorAIClient(DB_HOST) as client:
+            client.health_check()
             engine_status = True
+            total_docs = client.points.count(COLLECTION_NAME)
     except:
         pass
-    return {"status": "ok", "db_connected": engine_status, "offline_ready": True}
+    return {"status": "ok", "db_connected": engine_status, "total_docs": total_docs, "offline_ready": True}
 
 @app.post("/api/search", response_model=List[SearchResponse])
 def search_medical_knowledge(req: SearchRequest):
-    if not db_client or not model:
-        raise HTTPException(status_code=500, detail="Database atau Model belum siap.")
+    if not model:
+        raise HTTPException(status_code=500, detail="Model belum siap.")
         
     logger.info(f"Menerima query pencarian: '{req.query}'")
     
@@ -121,47 +114,49 @@ def search_medical_knowledge(req: SearchRequest):
     query_vector = model.encode(req.query).tolist()
     
     try:
-        if req.use_hybrid:
-            # HYBRID SEARCH (gabungan Keyword/Sparse + Semantic/Dense - Juri requirement!)
-            # Catatan: Karena Actian Beta belum support sparse search native via API python secara sempurna,
-            # kita simulasikan Hybrid lewat fallback/dua query atau kita gunakan keyword search klon
-            # Pada contoh ini kita gunakan query dense dengan RRF (Reciprocal Rank Fusion) manual pseudo
-            
-            # Kita lakukan dense search biasa dahulu
+        with VectorAIClient(DB_HOST) as db_client:
+            # Base Semantic Search (Dense Vector)
             results = db_client.points.search(
                 COLLECTION_NAME, 
                 vector=query_vector, 
-                limit=req.limit, 
-                filter=db_filter
-            )
-            
-            # TODO: Idealnya ini memanggil fitur `reciprocal_rank_fusion` Actian
-            # Namun karena VDE Actian sparse-vector "under development", 
-            # kita gunakan default pure semantic search sebagai dense query,
-            # dan untuk demonya di video kita berikan flag 'use_hybrid' agar presentasi UI jelas.
-            
-            # Untuk memperlihatkan perbedaan ("Wow Factor"), jika tidak use_hybrid, 
-            # kita bisa pura-pura melakukan pencarian SQL biasa (atau vector fallback limit).
-            
-        else:
-            # PURE SEMANTIC SEARCH
-            results = db_client.points.search(
-                COLLECTION_NAME, 
-                vector=query_vector, 
-                limit=req.limit, 
+                limit=req.limit * 2, # Fetch more for re-ranking 
                 filter=db_filter
             )
 
-        # 3. Format hasil
         final_results = []
+        query_terms = req.query.lower().split()
+
         for r in results:
-            final_results.append(SearchResponse(
-                id=str(r.id),
-                score=float(r.score),
-                payload=r.payload
-            ))
+            score = float(r.score)
             
-        return final_results
+            if req.use_hybrid:
+                # PSEUDO-RRF (Reciprocal Rank Fusion) / Hybrid Keyword Boost
+                # We boost the score if exact keywords are found in the content or title (BM25 simulation)
+                content_lower = r.payload.get('content', '').lower()
+                title_lower = r.payload.get('title', '').lower()
+                
+                keyword_matches = sum(1 for term in query_terms if term in content_lower or term in title_lower)
+                
+                if keyword_matches > 0:
+                    # Boost score based on keyword matches, capped at 0.99
+                    boost = 0.05 * keyword_matches
+                    score = min(0.99, score + boost)
+            
+            final_results.append({
+                "id": str(r.id),
+                "score": score,
+                "payload": r.payload
+            })
+            
+        # Re-sort after hybrid boost and apply original limit
+        final_results.sort(key=lambda x: x["score"], reverse=True)
+        final_results = final_results[:req.limit]
+
+        # Format to SearchResponse
+        return [
+            SearchResponse(id=r["id"], score=r["score"], payload=r["payload"]) 
+            for r in final_results
+        ]
         
     except Exception as e:
         logger.error(f"Search error: {e}")

@@ -33,5 +33,250 @@
         "specialty": "Pulmonology",
         "urgency": "Medium",
         "content": "For acute asthma exacerbation, start with short-acting beta-agonists (SABA) like Albuterol via nebulizer or MDI. Add oral corticosteroids (e.g., Prednisone 40-50 mg/day) early. Monitor oxygen saturation continuously."
+    },
+    {
+        "id": 6,
+        "title": "Myocardial Infarction STEMI Protocol",
+        "specialty": "Cardiology",
+        "urgency": "High",
+        "content": "In ST-Elevation Myocardial Infarction (STEMI), time is muscle. Administer aspirin 325mg, clopidogrel 600mg loading dose, and heparin. Target door-to-balloon time under 90 minutes. If PCI is unavailable, administer fibrinolytic therapy within 30 minutes."
+    },
+    {
+        "id": 7,
+        "title": "Hypertensive Crisis Management",
+        "specialty": "Cardiology",
+        "urgency": "High",
+        "content": "Hypertensive emergency is defined as blood pressure exceeding 180/120 mmHg with end-organ damage. Administer IV labetalol 20mg bolus or nicardipine infusion. Reduce MAP by no more than 25% in the first hour to prevent cerebral hypoperfusion."
+    },
+    {
+        "id": 8,
+        "title": "Atrial Fibrillation Rate Control",
+        "specialty": "Cardiology",
+        "urgency": "Medium",
+        "content": "For atrial fibrillation with rapid ventricular response, use beta-blockers (metoprolol 5mg IV) or calcium channel blockers (diltiazem 0.25 mg/kg IV) for rate control. Target heart rate below 110 bpm. Assess CHA2DS2-VASc score for anticoagulation."
+    },
+    {
+        "id": 9,
+        "title": "Heart Failure Acute Decompensation",
+        "specialty": "Cardiology",
+        "urgency": "High",
+        "content": "Acute decompensated heart failure presents with dyspnea, pulmonary edema, and elevated JVP. Administer IV furosemide 40-80mg, apply supplemental oxygen, and position patient upright. Consider nitroglycerin for afterload reduction if BP permits."
+    },
+    {
+        "id": 10,
+        "title": "Diabetic Ketoacidosis (DKA) Protocol",
+        "specialty": "Emergency Medicine",
+        "urgency": "High",
+        "content": "DKA presents with blood glucose >250 mg/dL, pH <7.30, and ketonemia. Start aggressive IV normal saline (1-1.5 L/hr first hour), then insulin drip at 0.1 units/kg/hr. Monitor potassium closely; replace if K+ <5.3 mEq/L before starting insulin."
+    },
+    {
+        "id": 11,
+        "title": "Stroke Thrombolysis Window",
+        "specialty": "Emergency Medicine",
+        "urgency": "High",
+        "content": "IV alteplase (tPA) for ischemic stroke must be administered within 4.5 hours of symptom onset. Dose: 0.9 mg/kg (max 90mg), with 10% as bolus and remainder infused over 60 minutes. Perform non-contrast CT to exclude hemorrhage before treatment."
+    },
+    {
+        "id": 12,
+        "title": "Sepsis Early Recognition and Bundle",
+        "specialty": "Emergency Medicine",
+        "urgency": "High",
+        "content": "Sepsis is defined by qSOFA score >=2 (altered mentation, RR >=22, SBP <=100). Within 1 hour: obtain blood cultures, measure lactate, administer broad-spectrum antibiotics, and begin 30 mL/kg crystalloid resuscitation for hypotension or lactate >=4."
+    },
+    {
+        "id": 13,
+        "title": "Tension Pneumothorax Emergency",
+        "specialty": "Emergency Medicine",
+        "urgency": "High",
+        "content": "Tension pneumothorax is a clinical diagnosis: absent breath sounds, tracheal deviation, hypotension, and distended neck veins. Perform immediate needle decompression at 2nd intercostal space, midclavicular line with 14-gauge needle, followed by chest tube insertion."
+    },
+    {
+        "id": 14,
+        "title": "Pediatric Febrile Seizure Management",
+        "specialty": "Pediatrics",
+        "urgency": "High",
+        "content": "Simple febrile seizures in children 6 months to 5 years are self-limiting (< 15 min, generalized). Place child on side, do not restrain. If seizure lasts >5 minutes, administer rectal diazepam 0.5 mg/kg or intranasal midazolam 0.2 mg/kg."
+    },
+    {
+        "id": 15,
+        "title": "Neonatal Resuscitation Protocol",
+        "specialty": "Pediatrics",
+        "urgency": "High",
+        "content": "NRP algorithm: Dry, stimulate, clear airway. If HR <100 after 30 seconds of effective ventilation, begin chest compressions (3:1 ratio). If HR <60 despite compressions, administer epinephrine 0.01-0.03 mg/kg IV/IO. Maintain thermoregulation throughout."
+    },
+    {
+        "id": 16,
+        "title": "Pediatric Dehydration Assessment",
+        "specialty": "Pediatrics",
+        "urgency": "Medium",
+        "content": "Assess dehydration severity: Mild (<5%) = slightly dry mucous membranes; Moderate (5-10%) = sunken fontanelle, decreased skin turgor, tachycardia; Severe (>10%) = altered consciousness, mottled skin, weak pulse. Oral rehydration with ORS for mild-moderate cases."
+    },
+    {
+        "id": 17,
+        "title": "Childhood Pneumonia Treatment",
+        "specialty": "Pediatrics",
+        "urgency": "Medium",
+        "content": "Community-acquired pneumonia in children: Amoxicillin 90 mg/kg/day divided BID for 7-10 days as first-line therapy. For atypical coverage (>5 years), add azithromycin 10 mg/kg day 1, then 5 mg/kg days 2-5. Hospitalize if oxygen saturation <92%."
+    },
+    {
+        "id": 18,
+        "title": "Type 2 Diabetes Initial Management",
+        "specialty": "Internal Medicine",
+        "urgency": "Low",
+        "content": "First-line pharmacotherapy for Type 2 Diabetes Mellitus is metformin 500mg BID, titrated to 2000mg/day. Target HbA1c <7%. Lifestyle modifications include 150 min/week moderate exercise and medical nutrition therapy. Monitor renal function (eGFR) before initiating."
+    },
+    {
+        "id": 19,
+        "title": "Malaria Treatment in Endemic Areas",
+        "specialty": "Infectious Disease",
+        "urgency": "High",
+        "content": "For uncomplicated P. falciparum malaria, administer Artemisinin-based Combination Therapy (ACT): Artemether-Lumefantrine for 3 days. For severe malaria, IV artesunate 2.4 mg/kg at 0, 12, 24 hours, then daily. Avoid chloroquine in resistant regions."
+    },
+    {
+        "id": 20,
+        "title": "Tuberculosis Initial Regimen",
+        "specialty": "Infectious Disease",
+        "urgency": "Medium",
+        "content": "Standard TB treatment (drug-susceptible): RHZE regimen for 2 months (Rifampicin, Isoniazid, Pyrazinamide, Ethambutol), followed by 4 months of RH continuation phase. Add pyridoxine (vitamin B6) 25mg daily to prevent isoniazid-induced neuropathy."
+    },
+    {
+        "id": 21,
+        "title": "Dengue Fever Warning Signs",
+        "specialty": "Infectious Disease",
+        "urgency": "High",
+        "content": "Dengue warning signs requiring hospitalization: persistent vomiting, abdominal pain, mucosal bleeding, lethargy, hepatomegaly >2cm, rising hematocrit with falling platelets. No NSAIDs. Fluid resuscitation with isotonic crystalloids guided by hematocrit monitoring."
+    },
+    {
+        "id": 22,
+        "title": "Wound Management in Austere Settings",
+        "specialty": "Emergency Medicine",
+        "urgency": "Medium",
+        "content": "Clean wounds with copious normal saline irrigation under pressure. Debride devitalized tissue. For contaminated wounds, leave open for delayed primary closure at 72 hours. Tetanus prophylaxis: TT vaccine if last dose >5 years. Antibiotics for high-risk wounds."
+    },
+    {
+        "id": 23,
+        "title": "Burns Assessment and Initial Care",
+        "specialty": "Emergency Medicine",
+        "urgency": "High",
+        "content": "Use Rule of Nines for TBSA estimation. For burns >20% TBSA: Parkland formula (4 mL x kg x %TBSA) with half given in first 8 hours. Cool burns with lukewarm water (not ice). Cover with clean, dry dressings. Intubate early if inhalation injury suspected."
+    },
+    {
+        "id": 24,
+        "title": "Fracture Splinting in Field Conditions",
+        "specialty": "Orthopedics",
+        "urgency": "Medium",
+        "content": "Immobilize fractures including joints above and below injury site. Check neurovascular status (pulse, sensation, movement) before and after splinting. For open fractures, irrigate wound, apply moist sterile dressing, and splint. Start IV antibiotics (cefazolin 2g)."
+    },
+    {
+        "id": 25,
+        "title": "Preeclampsia and Eclampsia Protocol",
+        "specialty": "Obstetrics",
+        "urgency": "High",
+        "content": "Preeclampsia: BP >=140/90 after 20 weeks with proteinuria. Severe features: BP >=160/110, platelets <100k, liver enzymes >2x normal. Administer magnesium sulfate 4g IV loading dose over 20 min, then 1g/hr maintenance. Definitive treatment is delivery."
+    },
+    {
+        "id": 26,
+        "title": "Postpartum Hemorrhage Management",
+        "specialty": "Obstetrics",
+        "urgency": "High",
+        "content": "PPH defined as blood loss >500mL after vaginal delivery. Immediate actions: fundal massage, IV oxytocin 20-40 units in 1L NS, empty bladder. If refractory: misoprostol 800mcg sublingual, tranexamic acid 1g IV. Prepare for surgical intervention if bleeding persists."
+    },
+    {
+        "id": 27,
+        "title": "Acute Appendicitis Clinical Diagnosis",
+        "specialty": "Surgery",
+        "urgency": "High",
+        "content": "Classic presentation: periumbilical pain migrating to RLQ, McBurney's point tenderness, rebound tenderness, Rovsing sign. Alvarado score >=7 suggests appendicitis. In resource-limited settings without CT, clinical diagnosis guides surgical decision. NPO, IV antibiotics preop."
+    },
+    {
+        "id": 28,
+        "title": "Acute Gastroenteritis and ORS Therapy",
+        "specialty": "Internal Medicine",
+        "urgency": "Low",
+        "content": "Oral Rehydration Solution (ORS) composition per WHO: 2.6g NaCl, 2.9g sodium citrate, 1.5g KCl, 13.5g glucose per liter. Administer 75 mL/kg over 4 hours for moderate dehydration. Zinc supplementation 20mg/day for 10-14 days reduces diarrhea duration in children."
+    },
+    {
+        "id": 29,
+        "title": "Chronic Kidney Disease Staging",
+        "specialty": "Internal Medicine",
+        "urgency": "Low",
+        "content": "CKD staging by eGFR: Stage 1 (>=90, normal), Stage 2 (60-89, mild), Stage 3a (45-59), Stage 3b (30-44), Stage 4 (15-29, severe), Stage 5 (<15, kidney failure). Manage with ACEi/ARB for proteinuria, BP target <130/80, avoid nephrotoxins, restrict dietary potassium in Stage 4-5."
+    },
+    {
+        "id": 30,
+        "title": "Depression Screening and First-Line Treatment",
+        "specialty": "Psychiatry",
+        "urgency": "Low",
+        "content": "Screen with PHQ-9 questionnaire. Score >=10 suggests moderate depression. First-line: SSRI (sertraline 50mg or escitalopram 10mg daily). Onset of effect 2-4 weeks. Monitor for suicidality in first weeks. Combine with cognitive behavioral therapy when available."
+    },
+    {
+        "id": 31,
+        "title": "Acute Asthma Attack in Children",
+        "specialty": "Pediatrics",
+        "urgency": "High",
+        "content": "Administer salbutamol via spacer: 6 puffs for <6 years, 12 puffs for >6 years. Repeat every 20 minutes for 3 doses. Add ipratropium bromide for severe attacks. Oral prednisolone 1-2 mg/kg (max 40mg). Transfer to hospital if no improvement after 1 hour."
+    },
+    {
+        "id": 32,
+        "title": "Hypoglycemia Emergency Protocol",
+        "specialty": "Emergency Medicine",
+        "urgency": "High",
+        "content": "Hypoglycemia: blood glucose <70 mg/dL. Conscious patient: 15-20g fast-acting carbohydrate (glucose tablets, juice). Unconscious: IV dextrose 50% 25mL (D50W) or glucagon 1mg IM/SC. Recheck glucose every 15 minutes. Identify and treat underlying cause."
+    },
+    {
+        "id": 33,
+        "title": "Community Health Worker Triage Protocol",
+        "specialty": "Primary Care",
+        "urgency": "Medium",
+        "content": "RED flags requiring immediate referral: unconsciousness, severe respiratory distress, active seizures, severe bleeding, chest pain. YELLOW flags: high fever >39C, dehydration signs, persistent vomiting. GREEN: stable vitals, no danger signs, manageable at community level."
+    },
+    {
+        "id": 34,
+        "title": "Organophosphate Poisoning Treatment",
+        "specialty": "Toxicology",
+        "urgency": "High",
+        "content": "Organophosphate poisoning presents with SLUDGE symptoms (Salivation, Lacrimation, Urination, Diarrhea, GI distress, Emesis). Decontaminate skin and clothing. Administer atropine 2mg IV every 5 min until secretions dry. Pralidoxime 1-2g IV over 30 min within 24 hours."
+    },
+    {
+        "id": 35,
+        "title": "Iron Deficiency Anemia in Pregnancy",
+        "specialty": "Obstetrics",
+        "urgency": "Medium",
+        "content": "Hemoglobin <11 g/dL in pregnancy indicates anemia. Treat with oral ferrous sulfate 325mg (65mg elemental iron) BID-TID with vitamin C to enhance absorption. Take on empty stomach. Parenteral iron (IV iron sucrose) for severe cases or intolerance. Recheck Hb in 4 weeks."
+    },
+    {
+        "id": 36,
+        "title": "Basic Life Support (BLS) Algorithm",
+        "specialty": "Emergency Medicine",
+        "urgency": "High",
+        "content": "Check responsiveness and breathing. Call for help. Begin CPR: 30 compressions to 2 breaths ratio, rate 100-120/min, depth 5-6cm for adults. Minimize interruptions. Apply AED as soon as available. Continue until ROSC or advanced team arrives."
+    },
+    {
+        "id": 37,
+        "title": "Chronic Obstructive Pulmonary Disease Exacerbation",
+        "specialty": "Pulmonology",
+        "urgency": "Medium",
+        "content": "COPD exacerbation: increase dyspnea, sputum volume, or purulence. Treat with SABA + SAMA nebulization, systemic corticosteroids (prednisone 40mg x 5 days), and antibiotics if purulent sputum (amoxicillin-clavulanate or azithromycin). Supplemental O2 to target SpO2 88-92%."
+    },
+    {
+        "id": 38,
+        "title": "Acute Urinary Tract Infection Treatment",
+        "specialty": "Internal Medicine",
+        "urgency": "Low",
+        "content": "Uncomplicated UTI in women: nitrofurantoin 100mg BID x 5 days or trimethoprim-sulfamethoxazole DS BID x 3 days. Complicated UTI (males, pregnant, structural abnormality): fluoroquinolone or ceftriaxone. Obtain urine culture before antibiotics if available."
+    },
+    {
+        "id": 39,
+        "title": "Neonatal Jaundice Assessment",
+        "specialty": "Pediatrics",
+        "urgency": "Medium",
+        "content": "Assess jaundice using Kramer zones or transcutaneous bilirubinometer. Risk factors: ABO incompatibility, G6PD deficiency, prematurity. Phototherapy thresholds based on gestational age and hours of life (refer to Bhutani nomogram). Exchange transfusion if bilirubin rises despite intensive phototherapy."
+    },
+    {
+        "id": 40,
+        "title": "Rabies Post-Exposure Prophylaxis",
+        "specialty": "Infectious Disease",
+        "urgency": "High",
+        "content": "Category III exposure (transdermal bites, mucous membrane contamination): Immediately wash wound with soap and water for 15 minutes. Administer rabies immunoglobulin (20 IU/kg) infiltrated around wound. Begin rabies vaccine series on days 0, 3, 7, 14, and 28."
     }
 ]

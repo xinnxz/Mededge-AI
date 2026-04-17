@@ -1,0 +1,19 @@
+version: "3.8"
+services:
+  vectoraidb:
+    image: williamimoh/actian-vectorai-db:latest
+    container_name: vectoraidb
+    ports:
+      - "50051:50051"
+    volumes:
+      - vectorai_data:/data
+    restart: unless-stopped
+    stop_grace_period: 2m
+    healthcheck:
+      test: ["CMD", "echo", "ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  vectorai_data:
