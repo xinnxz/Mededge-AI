@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>MedEdge AI - Database Search</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "primary-fixed": "#aae2fa",
+                      "on-background": "#2a343a",
+                      "outline-variant": "#a9b3bb",
+                      "error": "#a83836",
+                      "surface-container-lowest": "#ffffff",
+                      "secondary": "#4a664c",
+                      "on-tertiary": "#fff7f4",
+                      "error-container": "#fa746f",
+                      "tertiary-fixed-dim": "#efcbab",
+                      "surface-container": "#e7eff5",
+                      "outline": "#727c83",
+                      "on-tertiary-container": "#644b32",
+                      "surface": "#f6fafe",
+                      "secondary-dim": "#3e5a41",
+                      "background": "#f6fafe",
+                      "inverse-on-surface": "#999da1",
+                      "surface-container-highest": "#d9e4ec",
+                      "on-primary": "#f2faff",
+                      "tertiary-dim": "#684e35",
+                      "on-secondary-fixed": "#2a452e",
+                      "on-surface-variant": "#566167",
+                      "secondary-fixed": "#cbebca",
+                      "on-primary-fixed-variant": "#205d71",
+                      "on-error-container": "#6e0a12",
+                      "on-surface": "#2a343a",
+                      "surface-tint": "#2b667a",
+                      "on-secondary": "#e9ffe7",
+                      "surface-dim": "#d1dce3",
+                      "tertiary-fixed": "#fed9b8",
+                      "inverse-primary": "#aae2fa",
+                      "tertiary-container": "#fed9b8",
+                      "inverse-surface": "#0a0f12",
+                      "secondary-container": "#cbebca",
+                      "on-primary-container": "#125367",
+                      "surface-bright": "#f6fafe",
+                      "surface-container-high": "#e1e9f0",
+                      "on-primary-fixed": "#004050",
+                      "primary-container": "#aae2fa",
+                      "surface-container-low": "#eef4fa",
+                      "secondary-fixed-dim": "#bdddbd",
+                      "on-secondary-container": "#3c5840",
+                      "on-tertiary-fixed-variant": "#6f553b",
+                      "tertiary": "#755a40",
+                      "on-tertiary-fixed": "#503921",
+                      "on-secondary-fixed-variant": "#466249",
+                      "primary-fixed-dim": "#9cd4eb",
+                      "surface-variant": "#d9e4ec",
+                      "primary-dim": "#1c5a6d",
+                      "primary": "#2b667a",
+                      "error-dim": "#67040d",
+                      "on-error": "#fff7f6"
+              },
+              "borderRadius": {
+                      "DEFAULT": "1rem",
+                      "lg": "2rem",
+                      "xl": "3rem",
+                      "full": "9999px"
+              },
+              "fontFamily": {
+                      "headline": ["Plus Jakarta Sans"],
+                      "body": ["Plus Jakarta Sans"],
+                      "label": ["Plus Jakarta Sans"]
+              }
+            }
+          }
+        }
+    </script>
+<style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .icon-fill { font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        
+        /* Custom Scrollbar for Bento layout */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: theme('colors.surface-dim'); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: theme('colors.outline-variant'); }
+    </style>
+</head>
+<body class="bg-surface text-on-surface antialiased min-h-screen flex">
+<!-- Desktop SideNavBar (Hidden on Mobile) -->
+<nav class="hidden md:flex flex-col w-72 bg-white/80 backdrop-blur-2xl rounded-xl m-4 shadow-2xl shadow-sky-900/10 z-40 fixed left-0 top-0 h-[calc(100vh-2rem)] p-4 font-['Plus_Jakarta_Sans'] text-sm font-medium tonal-layering-no-borders">
+<!-- Header -->
+<div class="flex items-center gap-4 mb-8 px-4 mt-2">
+<div class="w-12 h-12 rounded-full bg-primary-container flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined icon-fill text-primary text-2xl" data-icon="health_and_safety">health_and_safety</span>
+</div>
+<div>
+<h1 class="text-lg font-bold text-sky-900">MedEdge AI</h1>
+<p class="text-xs text-on-surface-variant uppercase tracking-wider">Precision Care</p>
+</div>
+</div>
+<!-- Main Nav -->
+<div class="flex flex-col gap-2 flex-grow">
+<!-- Active Tab -->
+<a class="bg-sky-50 text-sky-700 rounded-lg px-6 py-4 flex items-center gap-3 hover:translate-x-1 duration-200" href="#">
+<span class="material-symbols-outlined icon-fill" data-icon="search_insights">search_insights</span>
+                Database Search
+            </a>
+<!-- Inactive Tab -->
+<a class="text-slate-500 px-6 py-4 flex items-center gap-3 hover:bg-sky-50/50 rounded-lg transition-colors hover:translate-x-1 duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="folder_shared">folder_shared</span>
+                Patient Records
+            </a>
+</div>
+<!-- CTA -->
+<div class="mt-auto mb-6 px-4">
+<button class="w-full bg-gradient-to-r from-primary to-primary-container text-white rounded-full py-3 px-6 font-semibold shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-transform flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-sm" data-icon="add">add</span>
+                New Entry
+             </button>
+</div>
+<!-- Footer Nav -->
+<div class="flex flex-col gap-1 border-t border-surface-container-high pt-4">
+<a class="text-slate-500 px-6 py-3 flex items-center gap-3 hover:bg-sky-50/50 rounded-lg transition-colors hover:translate-x-1 duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+                Help Center
+            </a>
+<a class="text-slate-500 px-6 py-3 flex items-center gap-3 hover:bg-sky-50/50 rounded-lg transition-colors hover:translate-x-1 duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+                Logout
+            </a>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-1 md:ml-[19.5rem] p-4 md:p-8 md:pt-4 max-w-7xl mx-auto w-full">
+<!-- Mobile TopAppBar -->
+<div class="md:hidden flex justify-between items-center w-full bg-slate-50/60 backdrop-blur-xl rounded-full mb-6 px-6 h-16 shadow-xl shadow-sky-900/5 tonal-shift-no-border">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center">
+<span class="material-symbols-outlined icon-fill text-primary text-lg" data-icon="health_and_safety">health_and_safety</span>
+</div>
+<span class="text-xl font-black text-sky-800">MedEdge AI</span>
+</div>
+<div class="flex items-center gap-4 text-sky-700">
+<button class="hover:bg-white/80 p-2 rounded-full transition-all duration-300 scale-95 active:scale-90">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+<button class="hover:bg-white/80 p-2 rounded-full transition-all duration-300 scale-95 active:scale-90">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+</button>
+</div>
+</div>
+<!-- Page Header -->
+<header class="mb-8 hidden md:flex justify-between items-center">
+<div>
+<h2 class="text-3xl font-headline font-extrabold tracking-tight text-on-background mb-1">Search Database</h2>
+<p class="text-on-surface-variant">Query patient records and clinical trials across 4 connected hospitals.</p>
+</div>
+<!-- Global Search Input -->
+<div class="relative w-96">
+<span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-outline">search</span>
+<input class="w-full bg-surface-container-high rounded-md py-3 pl-12 pr-4 text-sm focus:outline-none focus:bg-surface-container-lowest focus:ring-2 focus:ring-primary/20 border-none transition-all placeholder:text-outline" placeholder="Search by ID, name, or condition..." type="text"/>
+</div>
+</header>
+<!-- Bento Grid Layout: Compact Cards -->
+<div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 auto-rows-min">
+<!-- Bento Item 1: Active Query Status (Wide) -->
+<section class="md:col-span-2 lg:col-span-3 bg-surface-container-lowest rounded-xl p-6 hover:scale-[1.01] hover:shadow-[0_10px_40px_-10px_rgba(28,90,109,0.1)] transition-all duration-300 ease-out group">
+<div class="flex justify-between items-start mb-6">
+<div>
+<h3 class="text-lg font-headline font-bold text-on-background">Active Query: "Type 2 Diabetes Cohort"</h3>
+<p class="text-sm text-on-surface-variant mt-1">Filtering patients &gt; 45 yrs, HbA1c &gt; 6.5%, non-insulin dependent.</p>
+</div>
+<span class="bg-secondary-container text-on-secondary-container text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]" data-icon="check_circle">check_circle</span> Complete
+                    </span>
+</div>
+<div class="grid grid-cols-3 gap-4 border-t border-surface-container-high pt-6">
+<div>
+<p class="text-xs text-outline uppercase tracking-wider mb-1">Matches Found</p>
+<p class="text-3xl font-headline font-extrabold text-primary">1,248</p>
+</div>
+<div>
+<p class="text-xs text-outline uppercase tracking-wider mb-1">Data Completeness</p>
+<div class="flex items-center gap-2">
+<p class="text-3xl font-headline font-extrabold text-secondary">94%</p>
+<svg class="w-8 h-8 text-secondary-fixed-dim" viewbox="0 0 36 36">
+<path class="stroke-current" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke-width="4"></path>
+<path class="stroke-secondary" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke-dasharray="94, 100" stroke-width="4"></path>
+</svg>
+</div>
+</div>
+<div class="flex items-center justify-end">
+<button class="bg-primary-container text-on-primary-container rounded-full px-5 py-2 text-sm font-semibold hover:bg-primary-fixed-dim transition-colors flex items-center gap-2">
+                            Export Cohort <span class="material-symbols-outlined text-[18px]" data-icon="download">download</span>
+</button>
+</div>
+</div>
+</section>
+<!-- Bento Item 2: Quick Filter (Tall) -->
+<section class="md:row-span-2 bg-surface-container-lowest rounded-xl p-6 hover:scale-[1.01] hover:shadow-[0_10px_40px_-10px_rgba(28,90,109,0.1)] transition-all duration-300">
+<div class="flex items-center gap-3 mb-6">
+<div class="w-10 h-10 rounded-full bg-tertiary-container flex items-center justify-center text-on-tertiary-container">
+<span class="material-symbols-outlined" data-icon="tune">tune</span>
+</div>
+<h3 class="text-lg font-headline font-bold text-on-background">Quick Filters</h3>
+</div>
+<div class="space-y-4">
+<!-- Filter Pill -->
+<div class="bg-surface-container-low rounded-lg p-3 flex justify-between items-center cursor-pointer hover:bg-surface-container transition-colors">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-outline text-[20px]" data-icon="calendar_today">calendar_today</span>
+<span class="text-sm font-medium text-on-surface">Past 30 Days</span>
+</div>
+<span class="material-symbols-outlined text-outline text-[18px]" data-icon="chevron_right">chevron_right</span>
+</div>
+<!-- Filter Pill -->
+<div class="bg-primary-container/30 rounded-lg p-3 flex justify-between items-center cursor-pointer hover:bg-primary-container/50 border border-primary-container transition-colors">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px] icon-fill" data-icon="hub">hub</span>
+<span class="text-sm font-medium text-primary">All Facilities</span>
+</div>
+<span class="material-symbols-outlined text-primary text-[18px]" data-icon="check">check</span>
+</div>
+<!-- Filter Pill -->
+<div class="bg-surface-container-low rounded-lg p-3 flex justify-between items-center cursor-pointer hover:bg-surface-container transition-colors">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-outline text-[20px]" data-icon="description">description</span>
+<span class="text-sm font-medium text-on-surface">Has Lab Results</span>
+</div>
+<span class="material-symbols-outlined text-outline text-[18px]" data-icon="chevron_right">chevron_right</span>
+</div>
+</div>
+<button class="w-full mt-6 bg-transparent text-primary py-2 text-sm font-semibold hover:underline decoration-primary-fixed-dim transition-all text-center">
+                    Advanced Filters
+                </button>
+</section>
+<!-- Compact Data Card 1 -->
+<div class="bg-surface-container-lowest rounded-xl p-5 flex flex-col justify-between hover:scale-[1.02] hover:shadow-[0_10px_40px_-10px_rgba(28,90,109,0.1)] transition-all duration-300">
+<div class="flex justify-between items-start mb-4">
+<div class="w-8 h-8 rounded-full bg-secondary-container flex items-center justify-center text-on-secondary-container">
+<span class="material-symbols-outlined text-[18px]" data-icon="vital_signs">vital_signs</span>
+</div>
+<span class="text-xs font-bold text-secondary uppercase tracking-wider">High Match</span>
+</div>
+<div>
+<h4 class="text-base font-bold text-on-background line-clamp-1">Pt: #992-A</h4>
+<p class="text-xs text-on-surface-variant mt-1">48M • HbA1c: 7.1%</p>
+</div>
+<div class="mt-4 flex items-center justify-between">
+<span class="text-xs text-outline">Match Score</span>
+<div class="w-8 h-8 rounded-full border-2 border-secondary flex items-center justify-center">
+<span class="text-xs font-bold text-secondary">98</span>
+</div>
+</div>
+</div>
+<!-- Compact Data Card 2 -->
+<div class="bg-surface-container-lowest rounded-xl p-5 flex flex-col justify-between hover:scale-[1.02] hover:shadow-[0_10px_40px_-10px_rgba(28,90,109,0.1)] transition-all duration-300">
+<div class="flex justify-between items-start mb-4">
+<div class="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center text-on-primary-container">
+<span class="material-symbols-outlined text-[18px]" data-icon="science">science</span>
+</div>
+<span class="text-xs font-bold text-primary uppercase tracking-wider">Recent Lab</span>
+</div>
+<div>
+<h4 class="text-base font-bold text-on-background line-clamp-1">Pt: #401-C</h4>
+<p class="text-xs text-on-surface-variant mt-1">52F • HbA1c: 6.8%</p>
+</div>
+<div class="mt-4 flex items-center justify-between">
+<span class="text-xs text-outline">Match Score</span>
+<div class="w-8 h-8 rounded-full border-2 border-primary-container flex items-center justify-center">
+<span class="text-xs font-bold text-primary">85</span>
+</div>
+</div>
+</div>
+<!-- Compact Data Card 3 (Inactive State Example) -->
+<div class="bg-surface-dim rounded-xl p-5 flex flex-col justify-between opacity-80 hover:opacity-100 hover:scale-[1.02] transition-all duration-300 border border-outline-variant/15">
+<div class="flex justify-between items-start mb-4">
+<div class="w-8 h-8 rounded-full bg-surface-container-high flex items-center justify-center text-on-surface-variant">
+<span class="material-symbols-outlined text-[18px]" data-icon="folder_off">folder_off</span>
+</div>
+<span class="text-xs font-bold text-outline uppercase tracking-wider">Partial</span>
+</div>
+<div>
+<h4 class="text-base font-bold text-on-surface-variant line-clamp-1">Pt: #112-X</h4>
+<p class="text-xs text-outline mt-1">Missing recent labs</p>
+</div>
+<div class="mt-4 flex items-center justify-between">
+<span class="text-xs text-outline">Match Score</span>
+<div class="w-8 h-8 rounded-full border-2 border-outline-variant flex items-center justify-center">
+<span class="text-xs font-bold text-outline-variant">42</span>
+</div>
+</div>
+</div>
+<!-- Wide Summary Card -->
+<section class="md:col-span-2 lg:col-span-3 bg-surface-container-lowest rounded-xl p-6 hover:scale-[1.01] hover:shadow-[0_10px_40px_-10px_rgba(28,90,109,0.1)] transition-all duration-300 relative overflow-hidden">
+<!-- Decorative blurred background element -->
+<div class="absolute -right-20 -bottom-20 w-64 h-64 bg-primary-fixed-dim/20 rounded-full blur-3xl pointer-events-none"></div>
+<h3 class="text-lg font-headline font-bold text-on-background mb-4">Data Source Distribution</h3>
+<div class="flex flex-col md:flex-row gap-6 items-center">
+<!-- Progress Bars -->
+<div class="flex-1 w-full space-y-4">
+<div>
+<div class="flex justify-between text-sm mb-1">
+<span class="font-medium text-on-surface">Central Hospital</span>
+<span class="font-bold text-primary">45%</span>
+</div>
+<div class="w-full bg-surface-container-high rounded-full h-3">
+<div class="bg-primary rounded-full h-3" style="width: 45%"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between text-sm mb-1">
+<span class="font-medium text-on-surface">North Clinic</span>
+<span class="font-bold text-secondary">30%</span>
+</div>
+<div class="w-full bg-surface-container-high rounded-full h-3">
+<div class="bg-secondary rounded-full h-3" style="width: 30%"></div>
+</div>
+</div>
+<div>
+<div class="flex justify-between text-sm mb-1">
+<span class="font-medium text-on-surface">West Wing Rehab</span>
+<span class="font-bold text-tertiary">25%</span>
+</div>
+<div class="w-full bg-surface-container-high rounded-full h-3">
+<div class="bg-tertiary rounded-full h-3" style="width: 25%"></div>
+</div>
+</div>
+</div>
+<!-- Image placeholder representing data cluster -->
+<div class="w-full md:w-1/3 aspect-video rounded-lg overflow-hidden relative shadow-sm">
+<img alt="Data visualization abstract" class="w-full h-full object-cover" data-alt="abstract digital data visualization with glowing blue and green nodes connecting on a soft light background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBE2nbFhelmabQ_oqg8uRVbfod8hWLpKm8fnXplAGxn6gsgdNW7q5Qlk86gDoylYZqVGNTEzjTPgzu_kOsFodUdcbVlqKRbf_ZUv1k7__540dKgJ77bLIzVopqNOTSquD3IeTY40RgbA4FLH6whtpUsIx-BKeIrQxqsUChWskbfeJwAezNfvpx789cJ3Tj0bmc4A-sFVdbWgm71Lm_VpUEGD0nKC24oBGHz4rCgpPco_H2cOY8qfTP5SB0nEvq6Ban2WoH3M4RkTzo"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-variant/80 to-transparent"></div>
+<div class="absolute bottom-3 left-3 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary-dim text-sm bg-white/60 backdrop-blur-md rounded-full p-1" data-icon="visibility">visibility</span>
+<span class="text-xs font-bold text-primary-dim uppercase tracking-wider bg-white/60 backdrop-blur-md px-2 py-1 rounded-md">View Map</span>
+</div>
+</div>
+</div>
+</section>
+</div>
+</main>
+</body></html>
