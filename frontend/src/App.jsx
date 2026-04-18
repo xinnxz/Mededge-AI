@@ -3,15 +3,11 @@ import './App.css'
 
 const HighlightText = ({ text, query }) => {
   if (!query) return <>{text}</>;
-  // Filter kata-kata kurang dari 3 huruf biar tidak terlalu banyak false positive highlight (misal: "di", "ke")
   const terms = query.trim().split(/\s+/).filter(t => t.length > 2);
   if (terms.length === 0) return <>{text}</>;
-
-  // Escape regex
   const escapedTerms = terms.map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
   const regex = new RegExp(`(${escapedTerms.join('|')})`, 'gi');
   const parts = text.split(regex);
-
   return (
     <>
       {parts.map((part, i) => {
@@ -28,7 +24,6 @@ function App() {
   const [query, setQuery] = useState('')
   const [specialty, setSpecialty] = useState('All')
   const [urgency, setUrgency] = useState('All')
-  const [useHybrid, setUseHybrid] = useState(true)
   const [results, setResults] = useState([])
   const [loading, setLoading] = useState(false)
   const [searched, setSearched] = useState(false)
@@ -37,6 +32,15 @@ function App() {
   const [searchTime, setSearchTime] = useState(null)
   const [selectedItem, setSelectedItem] = useState(null)
 
+  const [searchHistory, setSearchHistory] = useState([])
+
+  // Comparison mode
+  const [compareMode, setCompareMode] = useState(false)
+  const [semanticResults, setSemanticResults] = useState([])
+  const [hybridResults, setHybridResults] = useState([])
+  const [semanticTime, setSemanticTime] = useState(null)
+  const [hybridTime, setHybridTime] = useState(null)
+
   useEffect(() => {
     fetch('http://localhost:8080/health')
       .then(res => res.json())
@@ -44,31 +48,116 @@ function App() {
       .catch(() => setDbStats({ connected: false, totalDocs: 0 }))
   }, [])
 
+  const runSearch = async (useHybrid) => {
+    const t0 = performance.now()
+    const res = await fetch('http://localhost:8080/api/search', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ query, specialty, urgency, use_hybrid: useHybrid, limit: 5 })
+    })
+    if (!res.ok) throw new Error(`Server error: ${res.status}`)
+    const data = await res.json()
+    return { data, time: Math.round(performance.now() - t0) }
+  }
+
   const handleSearch = async (e) => {
-    e.preventDefault()
+    if (e) e.preventDefault()
     if (!query) return
     setLoading(true)
     setSearched(true)
     setError(null)
-    const t0 = performance.now()
+    // Add to history (deduplicate, max 5)
+    setSearchHistory(prev => {
+      const filtered = prev.filter(h => h.toLowerCase() !== query.toLowerCase())
+      return [query, ...filtered].slice(0, 5)
+    })
     try {
-      const res = await fetch('http://localhost:8080/api/search', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query, specialty, urgency, use_hybrid: useHybrid, limit: 5 })
-      })
-      if (!res.ok) throw new Error(`Server error: ${res.status}`)
-      const data = await res.json()
-      setResults(data)
-      setSearchTime(Math.round(performance.now() - t0))
+      if (compareMode) {
+        const [sem, hyb] = await Promise.all([runSearch(false), runSearch(true)])
+        setSemanticResults(sem.data)
+        setHybridResults(hyb.data)
+        setSemanticTime(sem.time)
+        setHybridTime(hyb.time)
+        setResults([])
+        setSearchTime(null)
+      } else {
+        const result = await runSearch(true)
+        setResults(result.data)
+        setSearchTime(result.time)
+        setSemanticResults([])
+        setHybridResults([])
+      }
     } catch (err) {
-      setError('Backend offline. Please start the API server (python backend/api/main.py).')
-      setResults([])
+      setError('Backend offline. Please start the API server.')
+      setResults([]); setSemanticResults([]); setHybridResults([])
     } finally { setLoading(false) }
   }
 
+  // Quick search from emergency buttons or history
+  const quickSearch = (term) => {
+    setQuery(term)
+    // Use setTimeout to let React update state before firing search
+    setTimeout(() => {
+      setQuery(term)
+      setLoading(true)
+      setSearched(true)
+      setError(null)
+      setSearchHistory(prev => {
+        const filtered = prev.filter(h => h.toLowerCase() !== term.toLowerCase())
+        return [term, ...filtered].slice(0, 5)
+      })
+      const doSearch = async () => {
+        try {
+          if (compareMode) {
+            const [sem, hyb] = await Promise.all([
+              runSearch(false),
+              runSearch(true)
+            ].map(p => {
+              // Override query in closure
+              const t0 = performance.now()
+              return fetch('http://localhost:8080/api/search', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query: term, specialty, urgency, use_hybrid: p === runSearch(true), limit: 5 })
+              }).then(r => r.json()).then(data => ({ data, time: Math.round(performance.now() - t0) }))
+            }))
+            setSemanticResults(sem.data)
+            setHybridResults(hyb.data)
+            setSemanticTime(sem.time)
+            setHybridTime(hyb.time)
+            setResults([])
+          } else {
+            const t0 = performance.now()
+            const res = await fetch('http://localhost:8080/api/search', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ query: term, specialty, urgency, use_hybrid: true, limit: 5 })
+            })
+            const data = await res.json()
+            setResults(data)
+            setSearchTime(Math.round(performance.now() - t0))
+            setSemanticResults([])
+            setHybridResults([])
+          }
+        } catch {
+          setError('Backend offline.')
+          setResults([])
+        } finally { setLoading(false) }
+      }
+      doSearch()
+    }, 50)
+  }
+
+  const emergencyScenarios = [
+    { label: 'Cardiac Arrest', icon: 'cardiology', query: 'cardiac arrest resuscitation protocol' },
+    { label: 'Massive Bleeding', icon: 'bloodtype', query: 'massive hemorrhage trauma bleeding' },
+    { label: 'Anaphylaxis', icon: 'allergy', query: 'anaphylaxis epinephrine emergency' },
+    { label: 'Seizure', icon: 'neurology', query: 'seizure convulsion emergency management' },
+    { label: 'Burns', icon: 'local_fire_department', query: 'burns assessment initial care' },
+    { label: 'Poisoning', icon: 'skull', query: 'poisoning toxicology antidote treatment' },
+  ]
+
   const scoreLabel = (s) => s >= 0.9 ? 'High Match' : s >= 0.7 ? 'Good Match' : 'Low Match'
-  const scoreColor = (s) => s >= 0.9 ? 'secondary' : s >= 0.7 ? 'primary' : 'outline'
 
   const specialties = [
     'All', 'Cardiology', 'Emergency Medicine', 'Pediatrics', 'Pulmonology',
@@ -76,9 +165,42 @@ function App() {
     'Obstetrics', 'Surgery', 'Psychiatry', 'Primary Care'
   ]
 
+  const ResultCard = ({ item, rank }) => (
+    <div onClick={() => setSelectedItem(item)} className={`cursor-pointer transition-all hover:-translate-y-1 hover:shadow-lg rounded-3xl p-6 flex flex-col border ${item.score >= 0.7 ? 'bg-white border-surface-container-high' : 'bg-surface-container-low border-transparent hover:border-outline-variant/30'}`}>
+      <div className="flex justify-between items-start mb-4">
+        <div className="flex items-center gap-2.5">
+          <span className="text-[13px] font-black text-outline/40 w-6">#{rank}</span>
+          <div className={`w-10 h-10 rounded-xl flex items-center justify-center border ${item.score >= 0.9 ? 'bg-secondary-container/30 text-secondary border-secondary-container' : item.score >= 0.7 ? 'bg-primary-container/30 text-primary border-primary-container' : 'bg-white text-outline border-outline-variant/30'}`}>
+            <span className="material-symbols-outlined text-[20px] icon-fill">{item.score >= 0.9 ? 'vital_signs' : item.score >= 0.7 ? 'science' : 'health_metrics'}</span>
+          </div>
+        </div>
+        <span className={`text-[11px] font-extrabold uppercase tracking-widest ${item.score >= 0.9 ? 'text-secondary' : item.score >= 0.7 ? 'text-primary' : 'text-outline/70'}`}>{scoreLabel(item.score)}</span>
+      </div>
+      <h4 className="text-[15px] font-black text-on-background leading-snug line-clamp-2 mb-2">
+        <HighlightText text={item.payload.title} query={query} />
+      </h4>
+      <div className="flex items-center gap-2 mb-3">
+        <span className="bg-surface-container text-on-surface-variant text-[10px] font-extrabold px-2 py-0.5 rounded-md uppercase tracking-wider">{item.payload.specialty}</span>
+        <span className={`text-[10px] font-extrabold uppercase tracking-widest ${item.payload.urgency === 'High' ? 'text-error' : item.payload.urgency === 'Medium' ? 'text-tertiary' : 'text-outline'}`}>{item.payload.urgency}</span>
+      </div>
+      <p className="text-[13px] text-on-surface-variant font-medium line-clamp-2 leading-relaxed flex-grow">
+        <HighlightText text={item.payload.content} query={query} />
+      </p>
+      <div className="mt-4 pt-4 border-t border-surface-container-high flex items-center justify-between">
+        <span className="text-[11px] font-extrabold text-outline uppercase tracking-widest">Score</span>
+        <span className={`text-[18px] font-black ${item.score >= 0.9 ? 'text-secondary' : item.score >= 0.7 ? 'text-primary' : 'text-outline'}`}>
+          {(item.score * 100).toFixed(1)}<span className="text-[12px] opacity-60">%</span>
+        </span>
+      </div>
+    </div>
+  )
+
+  const hasCompareResults = compareMode && (semanticResults.length > 0 || hybridResults.length > 0)
+  const hasNormalResults = !compareMode && results.length > 0
+
   return (
     <div className="bg-surface text-on-surface antialiased min-h-screen flex font-['Plus_Jakarta_Sans']">
-      {/* Sidebar - Clean, no bounce */}
+      {/* Sidebar */}
       <nav className="hidden md:flex flex-col w-72 bg-white/90 backdrop-blur-3xl rounded-r-[32px] border-r border-surface-container-high z-40 fixed left-0 top-0 h-screen p-6 text-sm font-medium">
         <div className="flex items-center gap-4 mb-10 px-2 mt-4">
           <div className="w-12 h-12 rounded-2xl bg-primary-container flex items-center justify-center shrink-0 border border-primary-container/50">
@@ -94,9 +216,24 @@ function App() {
           <a className="bg-surface-container-low text-[#1c5a6d] rounded-2xl px-4 py-4 flex items-center gap-3 border border-surface-container-high" href="#">
             <span className="material-symbols-outlined icon-fill text-[20px]">search_insights</span>Database Search
           </a>
+
+          {/* Search History */}
+          {searchHistory.length > 0 && (
+            <div className="mt-6">
+              <p className="text-[10px] font-extrabold text-outline uppercase tracking-[0.15em] mb-3 px-2">Recent Queries</p>
+              <div className="space-y-1">
+                {searchHistory.map((h, i) => (
+                  <button key={i} onClick={() => quickSearch(h)} className="w-full text-left text-[13px] font-medium text-on-surface-variant rounded-xl px-4 py-3 hover:bg-surface-container-low transition-colors flex items-center gap-3 group">
+                    <span className="material-symbols-outlined text-[16px] text-outline/40 group-hover:text-primary transition-colors">history</span>
+                    <span className="truncate">{h}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* DB Connection Status */}
+        {/* DB Connection */}
         <div className="mt-auto mb-6">
           <div className={`w-full rounded-2xl py-3.5 px-4 font-bold flex items-center gap-3 text-xs border ${dbStats.connected ? 'bg-secondary-container/30 text-on-secondary-container border-secondary-container/50' : 'bg-error-container/20 text-error border-error-container/30'}`}>
             <div className={`w-2 h-2 rounded-full ${dbStats.connected ? 'bg-secondary' : 'bg-error'}`}></div>
@@ -125,7 +262,7 @@ function App() {
         </div>
 
         {/* Header + Search */}
-        <header className="mb-10 hidden md:flex justify-between items-end">
+        <header className="mb-6 hidden md:flex justify-between items-end">
           <div>
             <h2 className="text-[34px] font-black tracking-tight text-on-background mb-1 leading-none">Search Database</h2>
             <p className="text-sm text-on-surface-variant font-semibold mt-2.5">Query medical guidelines directly from Actian VectorAI edge database.</p>
@@ -136,7 +273,19 @@ function App() {
           </form>
         </header>
 
-        {/* Bento Grid - Completely rigid, solid, professional */}
+        {/* Emergency Quick Access */}
+        <div className="hidden md:flex items-center gap-2 mb-8 flex-wrap">
+          <span className="text-[11px] font-extrabold text-error uppercase tracking-widest mr-1 flex items-center gap-1.5">
+            <span className="material-symbols-outlined text-[14px]">emergency</span>Quick:
+          </span>
+          {emergencyScenarios.map(s => (
+            <button key={s.label} onClick={() => quickSearch(s.query)} className="bg-white border border-surface-container-high rounded-full px-4 py-2 text-[12px] font-bold text-on-surface-variant hover:border-primary/40 hover:text-primary transition-colors flex items-center gap-1.5">
+              <span className="material-symbols-outlined text-[14px]">{s.icon}</span>{s.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Bento Grid */}
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 auto-rows-min">
 
           {/* Active Query Status (Wide) */}
@@ -148,7 +297,7 @@ function App() {
                 </h3>
                 <p className="text-sm text-on-surface-variant mt-2 font-medium">
                   {searched
-                    ? `${useHybrid ? 'Hybrid Fusion' : 'Pure Semantic'} Engine Response`
+                    ? compareMode ? 'Side-by-Side Comparison: Semantic vs Hybrid Fusion' : 'Hybrid Fusion Engine Response'
                     : 'Enter keywords above to query the localized embedding space.'}
                 </p>
               </div>
@@ -165,20 +314,26 @@ function App() {
               <div>
                 <p className="text-[11px] text-outline uppercase tracking-[0.15em] font-extrabold mb-2">Matches Found</p>
                 <div className="flex items-baseline gap-2">
-                  <p className="text-[40px] font-black text-on-background leading-none tracking-tight">{searched ? results.length : '—'}</p>
+                  <p className="text-[40px] font-black text-on-background leading-none tracking-tight">
+                    {searched ? (compareMode ? hybridResults.length : results.length) : '—'}
+                  </p>
                   {searched && <span className="text-sm font-semibold text-outline">docs</span>}
                 </div>
               </div>
               <div>
                 <p className="text-[11px] text-outline uppercase tracking-[0.15em] font-extrabold mb-2">Retrieval Latency</p>
                 <div className="flex items-baseline gap-2">
-                  <p className="text-[40px] font-black text-on-background leading-none tracking-tight">{searchTime !== null ? searchTime : '—'}</p>
-                  {searchTime !== null && <span className="text-sm font-semibold text-outline">ms</span>}
+                  <p className="text-[40px] font-black text-on-background leading-none tracking-tight">
+                    {compareMode ? (hybridTime !== null ? hybridTime : '—') : (searchTime !== null ? searchTime : '—')}
+                  </p>
+                  {(compareMode ? hybridTime !== null : searchTime !== null) && <span className="text-sm font-semibold text-outline">ms</span>}
                 </div>
               </div>
               <div>
                 <p className="text-[11px] text-outline uppercase tracking-[0.15em] font-extrabold mb-2">Search Mode</p>
-                <p className="text-[24px] font-black text-primary leading-none tracking-tight mt-2">{useHybrid ? 'Hybrid RRF' : 'Semantic Vector'}</p>
+                <p className="text-[24px] font-black text-primary leading-none tracking-tight mt-2">
+                  {compareMode ? 'Comparison' : 'Hybrid RRF'}
+                </p>
               </div>
             </div>
           </section>
@@ -192,7 +347,7 @@ function App() {
               <h3 className="text-lg font-black text-on-background tracking-tight">Query Filters</h3>
             </div>
 
-            <div className="space-y-6 flex-grow">
+            <div className="space-y-5 flex-grow">
               <div>
                 <label className="text-[11px] font-extrabold text-outline uppercase tracking-[0.1em] mb-2.5 block">Clinical Specialty</label>
                 <div className="relative">
@@ -218,22 +373,26 @@ function App() {
                 </div>
               </div>
 
+              {/* Compare Mode Toggle */}
               <div className="pt-2">
-                <label className="text-[11px] font-extrabold text-outline uppercase tracking-[0.1em] mb-2.5 block">Engine Settings</label>
-                <div onClick={() => setUseHybrid(!useHybrid)} className={`rounded-2xl p-4 flex justify-between items-center cursor-pointer border ${useHybrid ? 'bg-primary-container/20 border-primary-container' : 'bg-surface-container-lowest border-surface-container-high'}`}>
+                <label className="text-[11px] font-extrabold text-outline uppercase tracking-[0.1em] mb-2.5 block">Engine Mode</label>
+                <div onClick={() => setCompareMode(!compareMode)} className={`rounded-2xl p-4 flex justify-between items-center cursor-pointer border ${compareMode ? 'bg-tertiary-container/20 border-tertiary-container' : 'bg-surface-container-lowest border-surface-container-high'}`}>
                   <div className="flex items-center gap-3">
-                    <span className={`material-symbols-outlined text-[20px] ${useHybrid ? 'text-primary icon-fill' : 'text-outline/60'}`}>hub</span>
-                    <span className={`text-[14px] font-bold ${useHybrid ? 'text-[#1c5a6d]' : 'text-on-surface-variant'}`}>Hybrid Fusion</span>
+                    <span className={`material-symbols-outlined text-[20px] ${compareMode ? 'text-tertiary icon-fill' : 'text-outline/60'}`}>compare_arrows</span>
+                    <span className={`text-[14px] font-bold ${compareMode ? 'text-tertiary' : 'text-on-surface-variant'}`}>Compare Mode</span>
                   </div>
-                  <div className={`w-11 h-6 rounded-full p-1 flex items-center transition-colors ${useHybrid ? 'bg-[#1c5a6d] justify-end' : 'bg-outline-variant justify-start'}`}>
+                  <div className={`w-11 h-6 rounded-full p-1 flex items-center transition-colors ${compareMode ? 'bg-tertiary justify-end' : 'bg-outline-variant justify-start'}`}>
                     <div className="w-4 h-4 bg-white rounded-full shadow-sm"></div>
                   </div>
                 </div>
+                <p className="text-[11px] text-outline mt-2 leading-snug px-1">
+                  {compareMode ? 'Runs Semantic & Hybrid queries simultaneously side-by-side.' : 'Toggle to compare Semantic vs Hybrid results.'}
+                </p>
               </div>
             </div>
 
-            <button onClick={handleSearch} disabled={loading || !query} className="w-full mt-10 bg-[#1c5a6d] hover:bg-[#124151] text-white rounded-2xl py-4 text-[15px] font-extrabold shadow-sm transition-colors disabled:opacity-50 disabled:hover:bg-[#1c5a6d]">
-              {loading ? 'Processing Query...' : 'Execute Search'}
+            <button onClick={handleSearch} disabled={loading || !query} className="w-full mt-8 bg-[#1c5a6d] hover:bg-[#124151] text-white rounded-2xl py-4 text-[15px] font-extrabold shadow-sm transition-colors disabled:opacity-50 disabled:hover:bg-[#1c5a6d]">
+              {loading ? 'Processing...' : compareMode ? 'Run Comparison' : 'Execute Search'}
             </button>
           </section>
 
@@ -250,48 +409,118 @@ function App() {
             </div>
           )}
 
-          {/* Dynamic Result Cards */}
-          {results.map((item, i) => (
-            <div key={i} onClick={() => setSelectedItem(item)} className={`cursor-pointer transition-all hover:-translate-y-1 hover:shadow-lg rounded-[32px] p-8 flex flex-col justify-between border ${item.score >= 0.7 ? 'bg-white border-surface-container-high' : 'bg-surface-container-low border-transparent hover:border-outline-variant/30'}`}>
-              <div className="flex justify-between items-start mb-6">
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center border ${item.score >= 0.9 ? 'bg-secondary-container/30 text-secondary border-secondary-container' : item.score >= 0.7 ? 'bg-primary-container/30 text-primary border-primary-container' : 'bg-white text-outline border-outline-variant/30'}`}>
-                  <span className="material-symbols-outlined text-[24px] icon-fill">{item.score >= 0.9 ? 'vital_signs' : item.score >= 0.7 ? 'science' : 'health_metrics'}</span>
+          {/* ===== COMPARISON MODE: Side-by-Side ===== */}
+          {hasCompareResults && (
+            <div className="col-span-1 md:col-span-2 lg:col-span-3">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* LEFT: Pure Semantic */}
+                <div className="bg-white border border-surface-container-high rounded-[32px] p-6 shadow-sm">
+                  <div className="flex items-center justify-between mb-6 pb-4 border-b border-surface-container-high">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-primary-container/30 border border-primary-container flex items-center justify-center">
+                        <span className="material-symbols-outlined text-primary text-[20px] icon-fill">neurology</span>
+                      </div>
+                      <div>
+                        <h4 className="text-[16px] font-black text-on-background">Pure Semantic</h4>
+                        <p className="text-[11px] text-outline font-bold">Dense Vector Only</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[22px] font-black text-primary">{semanticTime}<span className="text-[13px] text-outline ml-1">ms</span></p>
+                    </div>
+                  </div>
+                  <div className="space-y-4">
+                    {semanticResults.map((item, i) => (
+                      <ResultCard key={`sem-${i}`} item={item} rank={i + 1} />
+                    ))}
+                    {semanticResults.length === 0 && (
+                      <p className="text-center text-outline py-8 font-medium">No results</p>
+                    )}
+                  </div>
                 </div>
-                <span className={`text-[11px] font-extrabold uppercase tracking-widest ${item.score >= 0.9 ? 'text-secondary' : item.score >= 0.7 ? 'text-primary' : 'text-outline/70'}`}>{scoreLabel(item.score)}</span>
+
+                {/* RIGHT: Hybrid RRF */}
+                <div className="bg-white border border-tertiary-container/50 rounded-[32px] p-6 shadow-sm relative overflow-hidden">
+                  <div className="absolute top-0 right-0 bg-tertiary text-white text-[10px] font-extrabold uppercase tracking-widest px-4 py-1.5 rounded-bl-2xl">Enhanced</div>
+                  <div className="flex items-center justify-between mb-6 pb-4 border-b border-surface-container-high">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-tertiary-container/30 border border-tertiary-container flex items-center justify-center">
+                        <span className="material-symbols-outlined text-tertiary text-[20px] icon-fill">hub</span>
+                      </div>
+                      <div>
+                        <h4 className="text-[16px] font-black text-on-background">Hybrid RRF</h4>
+                        <p className="text-[11px] text-outline font-bold">Vector + Keyword Boost</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[22px] font-black text-tertiary">{hybridTime}<span className="text-[13px] text-outline ml-1">ms</span></p>
+                    </div>
+                  </div>
+                  <div className="space-y-4">
+                    {hybridResults.map((item, i) => (
+                      <ResultCard key={`hyb-${i}`} item={item} rank={i + 1} />
+                    ))}
+                    {hybridResults.length === 0 && (
+                      <p className="text-center text-outline py-8 font-medium">No results</p>
+                    )}
+                  </div>
+                </div>
               </div>
 
-              <div className="flex-grow">
-                <h4 className="text-[17px] font-black text-on-background leading-snug line-clamp-2">
-                  <HighlightText text={item.payload.title} query={query} />
-                </h4>
-                <div className="flex items-center gap-2.5 mt-3">
-                  <span className="bg-surface-container text-on-surface-variant text-[11px] font-extrabold px-2.5 py-1 rounded-lg uppercase tracking-wider">{item.payload.specialty}</span>
-                  <span className={`text-[11px] font-extrabold uppercase tracking-widest ${item.payload.urgency === 'High' ? 'text-error' : item.payload.urgency === 'Medium' ? 'text-tertiary' : 'text-outline'}`}>{item.payload.urgency} Priority</span>
+              {/* Comparison Insight Banner */}
+              {semanticResults.length > 0 && hybridResults.length > 0 && (
+                <div className="mt-6 bg-[#0a0f12] border border-[#161f25] rounded-[32px] p-6 md:p-8">
+                  <h4 className="text-[16px] font-black text-white mb-4 flex items-center gap-3">
+                    <span className="material-symbols-outlined text-amber-400 text-[20px]">analytics</span>
+                    Comparison Insight
+                  </h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                    <div>
+                      <p className="text-[11px] text-slate-400 uppercase tracking-widest font-extrabold mb-1">Semantic Top Score</p>
+                      <p className="text-[24px] font-black text-primary-fixed">
+                        {(semanticResults[0].score * 100).toFixed(1)}<span className="text-[14px] text-slate-500">%</span>
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[11px] text-slate-400 uppercase tracking-widest font-extrabold mb-1">Hybrid Top Score</p>
+                      <p className="text-[24px] font-black text-tertiary-fixed">
+                        {(hybridResults[0].score * 100).toFixed(1)}<span className="text-[14px] text-slate-500">%</span>
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[11px] text-slate-400 uppercase tracking-widest font-extrabold mb-1">RRF Boost Effect</p>
+                      <p className="text-[24px] font-black text-amber-400">
+                        +{((hybridResults[0].score - semanticResults[0].score) * 100).toFixed(1)}<span className="text-[14px] text-slate-500">%</span>
+                      </p>
+                    </div>
+                  </div>
+                  <p className="text-[13px] text-slate-400 font-medium mt-4 leading-relaxed">
+                    Hybrid RRF re-ranks documents by boosting exact keyword matches found in titles and content.
+                    Documents containing the search terms "{query}" receive an additive score increase,
+                    demonstrating how Actian VectorAI combines dense vector similarity with sparse keyword relevance.
+                  </p>
                 </div>
-                <p className="text-[14px] text-on-surface-variant mt-4 font-medium line-clamp-3 leading-relaxed">
-                  <HighlightText text={item.payload.content} query={query} />
-                </p>
-              </div>
-
-              <div className="mt-8 pt-6 border-t border-surface-container-high flex items-center justify-between">
-                <span className="text-[12px] font-extrabold text-outline uppercase tracking-widest">Match Score</span>
-                <span className={`text-[20px] font-black ${item.score >= 0.9 ? 'text-secondary' : item.score >= 0.7 ? 'text-primary' : 'text-outline'}`}>
-                  {(item.score * 100).toFixed(1)}<span className="text-[14px] opacity-60 ml-0.5">%</span>
-                </span>
-              </div>
+              )}
             </div>
+          )}
+
+          {/* ===== NORMAL MODE: Standard Results ===== */}
+          {hasNormalResults && results.map((item, i) => (
+            <ResultCard key={i} item={item} rank={i + 1} />
           ))}
 
           {/* Loading State */}
           {loading && (
             <div className="col-span-1 md:col-span-2 lg:col-span-3 bg-white border border-surface-container-high rounded-[32px] p-16 flex flex-col items-center justify-center shadow-sm">
               <span className="material-symbols-outlined text-[40px] text-primary/40 animate-spin mb-5">progress_activity</span>
-              <p className="font-extrabold text-on-background text-[18px]">Querying Vector Index...</p>
+              <p className="font-extrabold text-on-background text-[18px]">
+                {compareMode ? 'Running dual queries: Semantic + Hybrid...' : 'Querying Vector Index...'}
+              </p>
             </div>
           )}
 
           {/* Empty State */}
-          {searched && !loading && !error && results.length === 0 && (
+          {searched && !loading && !error && !hasCompareResults && !hasNormalResults && (
             <div className="col-span-1 md:col-span-2 lg:col-span-3 bg-surface-container-low border border-transparent rounded-[32px] p-16 flex flex-col items-center justify-center">
               <div className="w-20 h-20 rounded-3xl bg-white border border-surface-container-high flex items-center justify-center mb-5">
                 <span className="material-symbols-outlined text-[40px] text-outline/40">search_off</span>
@@ -301,7 +530,7 @@ function App() {
             </div>
           )}
 
-          {/* Infrastructure Info (Wide) - Clean tech specs */}
+          {/* System Architecture */}
           <section className="col-span-1 md:col-span-2 lg:col-span-3 bg-[#0a0f12] border border-[#161f25] rounded-[32px] p-8 md:p-10 mt-6 overflow-hidden relative shadow-lg">
             <div className="absolute right-0 top-0 bottom-0 w-2/5 bg-gradient-to-l from-[#1c5a6d]/20 to-transparent pointer-events-none"></div>
             <h3 className="text-[20px] font-black text-white tracking-tight mb-8">System Architecture</h3>
@@ -339,13 +568,13 @@ function App() {
           {/* Detail View Modal */}
           {selectedItem && (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-[#0a0f12]/60 backdrop-blur-md" onClick={() => setSelectedItem(null)}>
-              <div className="bg-white rounded-[32px] p-8 md:p-10 max-w-3xl w-full shadow-2xl border border-surface-container-high transform transition-all relative" onClick={e => e.stopPropagation()}>
+              <div className="bg-white rounded-[32px] p-8 md:p-10 max-w-3xl w-full shadow-2xl border border-surface-container-high relative" onClick={e => e.stopPropagation()}>
                 <button onClick={() => setSelectedItem(null)} className="absolute top-6 right-6 w-10 h-10 rounded-full bg-surface-container-low flex items-center justify-center text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors">
                   <span className="material-symbols-outlined">close</span>
                 </button>
 
                 <div className="flex items-center gap-3 mb-6 mt-2">
-                  <span className={`bg-surface-container text-on-surface-variant text-[11px] font-extrabold px-3 py-1.5 rounded-lg uppercase tracking-wider`}>{selectedItem.payload.specialty}</span>
+                  <span className="bg-surface-container text-on-surface-variant text-[11px] font-extrabold px-3 py-1.5 rounded-lg uppercase tracking-wider">{selectedItem.payload.specialty}</span>
                   <span className={`text-[11px] font-extrabold uppercase tracking-widest ${selectedItem.payload.urgency === 'High' ? 'text-error' : selectedItem.payload.urgency === 'Medium' ? 'text-tertiary' : 'text-outline/70'}`}>{selectedItem.payload.urgency} Priority</span>
                 </div>
 
