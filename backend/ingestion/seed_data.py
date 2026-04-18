@@ -1,5 +1,7 @@
 import json
 import logging
+from pathlib import Path
+
 from sentence_transformers import SentenceTransformer
 from actian_vectorai import VectorAIClient, VectorParams, Distance, PointStruct
 
@@ -7,11 +9,12 @@ from actian_vectorai import VectorAIClient, VectorParams, Distance, PointStruct
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("MedEdge_Ingestion")
 
-# Configuration
+# Configuration (paths relatif ke root repo, bukan cwd terminal)
+REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 DB_HOST = "localhost:50051"
 COLLECTION_NAME = "medical_knowledge"
 EMBEDDING_MODEL = "all-MiniLM-L6-v2"
-DATA_FILE = "data/medical_sample.json"
+DATA_FILE = REPO_ROOT / "data" / "medical_sample.json"
 
 def init_db(client: VectorAIClient):
     """Pastikan collection siap. Ini mendemonstrasikan Actian DB setup."""
@@ -35,7 +38,7 @@ def seed_data():
     # 2. Baca file data json offline
     logger.info(f"📖 Membaca data knowledge base medis dari {DATA_FILE}")
     try:
-        with open(DATA_FILE, 'r') as f:
+        with DATA_FILE.open("r", encoding="utf-8") as f:
             data = json.load(f)
     except Exception as e:
         logger.error(f"❌ Gagal membaca {DATA_FILE}: {e}")
