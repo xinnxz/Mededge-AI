@@ -1,6 +1,29 @@
 import { useState, useEffect } from 'react'
 import './App.css'
 
+const HighlightText = ({ text, query }) => {
+  if (!query) return <>{text}</>;
+  // Filter kata-kata kurang dari 3 huruf biar tidak terlalu banyak false positive highlight (misal: "di", "ke")
+  const terms = query.trim().split(/\s+/).filter(t => t.length > 2);
+  if (terms.length === 0) return <>{text}</>;
+
+  // Escape regex
+  const escapedTerms = terms.map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+  const regex = new RegExp(`(${escapedTerms.join('|')})`, 'gi');
+  const parts = text.split(regex);
+
+  return (
+    <>
+      {parts.map((part, i) => {
+        const isMatch = terms.some(term => part.toLowerCase() === term.toLowerCase());
+        return isMatch
+          ? <mark key={i} className="bg-amber-200/90 text-amber-900 px-1 py-0.5 mx-0.5 rounded-[4px] font-black shadow-sm">{part}</mark>
+          : <span key={i}>{part}</span>;
+      })}
+    </>
+  );
+};
+
 function App() {
   const [query, setQuery] = useState('')
   const [specialty, setSpecialty] = useState('All')
@@ -12,6 +35,7 @@ function App() {
   const [error, setError] = useState(null)
   const [dbStats, setDbStats] = useState({ connected: false, totalDocs: 0 })
   const [searchTime, setSearchTime] = useState(null)
+  const [selectedItem, setSelectedItem] = useState(null)
 
   useEffect(() => {
     fetch('http://localhost:8080/health')
@@ -228,7 +252,7 @@ function App() {
 
           {/* Dynamic Result Cards */}
           {results.map((item, i) => (
-            <div key={i} className={`rounded-[32px] p-8 flex flex-col justify-between border ${item.score >= 0.7 ? 'bg-white border-surface-container-high shadow-sm' : 'bg-surface-container-low border-transparent'}`}>
+            <div key={i} onClick={() => setSelectedItem(item)} className={`cursor-pointer transition-all hover:-translate-y-1 hover:shadow-lg rounded-[32px] p-8 flex flex-col justify-between border ${item.score >= 0.7 ? 'bg-white border-surface-container-high' : 'bg-surface-container-low border-transparent hover:border-outline-variant/30'}`}>
               <div className="flex justify-between items-start mb-6">
                 <div className={`w-12 h-12 rounded-2xl flex items-center justify-center border ${item.score >= 0.9 ? 'bg-secondary-container/30 text-secondary border-secondary-container' : item.score >= 0.7 ? 'bg-primary-container/30 text-primary border-primary-container' : 'bg-white text-outline border-outline-variant/30'}`}>
                   <span className="material-symbols-outlined text-[24px] icon-fill">{item.score >= 0.9 ? 'vital_signs' : item.score >= 0.7 ? 'science' : 'health_metrics'}</span>
@@ -237,12 +261,16 @@ function App() {
               </div>
 
               <div className="flex-grow">
-                <h4 className="text-[17px] font-black text-on-background leading-snug line-clamp-2">{item.payload.title}</h4>
+                <h4 className="text-[17px] font-black text-on-background leading-snug line-clamp-2">
+                  <HighlightText text={item.payload.title} query={query} />
+                </h4>
                 <div className="flex items-center gap-2.5 mt-3">
                   <span className="bg-surface-container text-on-surface-variant text-[11px] font-extrabold px-2.5 py-1 rounded-lg uppercase tracking-wider">{item.payload.specialty}</span>
                   <span className={`text-[11px] font-extrabold uppercase tracking-widest ${item.payload.urgency === 'High' ? 'text-error' : item.payload.urgency === 'Medium' ? 'text-tertiary' : 'text-outline'}`}>{item.payload.urgency} Priority</span>
                 </div>
-                <p className="text-[14px] text-on-surface-variant mt-4 font-medium line-clamp-3 leading-relaxed">{item.payload.content}</p>
+                <p className="text-[14px] text-on-surface-variant mt-4 font-medium line-clamp-3 leading-relaxed">
+                  <HighlightText text={item.payload.content} query={query} />
+                </p>
               </div>
 
               <div className="mt-8 pt-6 border-t border-surface-container-high flex items-center justify-between">
@@ -307,6 +335,53 @@ function App() {
               </div>
             </div>
           </section>
+
+          {/* Detail View Modal */}
+          {selectedItem && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-[#0a0f12]/60 backdrop-blur-md" onClick={() => setSelectedItem(null)}>
+              <div className="bg-white rounded-[32px] p-8 md:p-10 max-w-3xl w-full shadow-2xl border border-surface-container-high transform transition-all relative" onClick={e => e.stopPropagation()}>
+                <button onClick={() => setSelectedItem(null)} className="absolute top-6 right-6 w-10 h-10 rounded-full bg-surface-container-low flex items-center justify-center text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors">
+                  <span className="material-symbols-outlined">close</span>
+                </button>
+
+                <div className="flex items-center gap-3 mb-6 mt-2">
+                  <span className={`bg-surface-container text-on-surface-variant text-[11px] font-extrabold px-3 py-1.5 rounded-lg uppercase tracking-wider`}>{selectedItem.payload.specialty}</span>
+                  <span className={`text-[11px] font-extrabold uppercase tracking-widest ${selectedItem.payload.urgency === 'High' ? 'text-error' : selectedItem.payload.urgency === 'Medium' ? 'text-tertiary' : 'text-outline/70'}`}>{selectedItem.payload.urgency} Priority</span>
+                </div>
+
+                <h2 className="text-[28px] font-black text-on-background leading-tight mb-6 pr-12"><HighlightText text={selectedItem.payload.title} query={query} /></h2>
+
+                <div className="bg-surface-container-low border border-surface-container-high rounded-2xl p-6 mb-8">
+                  <p className="text-[16px] text-on-surface font-medium leading-relaxed">
+                    <HighlightText text={selectedItem.payload.content} query={query} />
+                  </p>
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-surface-container-high">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center border ${selectedItem.score >= 0.9 ? 'bg-secondary-container/30 text-secondary border-secondary-container' : selectedItem.score >= 0.7 ? 'bg-primary-container/30 text-primary border-primary-container' : 'bg-surface-container-high text-outline border-outline-variant/30'}`}>
+                      <span className="material-symbols-outlined text-[24px] icon-fill">analytics</span>
+                    </div>
+                    <div>
+                      <p className="text-[11px] font-extrabold text-outline uppercase tracking-widest">Actian Vector Match</p>
+                      <p className={`text-[20px] font-black ${selectedItem.score >= 0.9 ? 'text-secondary' : selectedItem.score >= 0.7 ? 'text-primary' : 'text-outline'}`}>
+                        {(selectedItem.score * 100).toFixed(2)}<span className="text-[14px] opacity-60 ml-0.5">%</span>
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3 w-full sm:w-auto">
+                    <button onClick={() => alert('Offline printing sequence initiated...')} className="flex-1 sm:flex-none border border-surface-container-high bg-white text-on-surface rounded-xl px-6 py-3.5 text-[14px] font-extrabold hover:bg-surface-container-low transition-colors flex items-center justify-center gap-2">
+                      <span className="material-symbols-outlined text-[18px]">print</span> Print
+                    </button>
+                    <button onClick={() => alert('Alert sent to on-call pager.')} className="flex-1 sm:flex-none bg-[#1c5a6d] hover:bg-[#124151] text-white rounded-xl px-6 py-3.5 text-[14px] font-extrabold transition-colors shadow-sm flex items-center justify-center gap-2">
+                      <span className="material-symbols-outlined text-[18px]">send_to_mobile</span> Send to Pager
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </main>
     </div>
