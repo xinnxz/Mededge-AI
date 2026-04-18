@@ -1,5 +1,12 @@
 import { useState, useEffect } from 'react'
 import './App.css'
+import {
+  IllustrationAwaitingQuery,
+  IllustrationEmptyGuidelines,
+  IllustrationAirgappedEdge,
+  IllustrationQueryFilters,
+  IllustrationLoadingVectors,
+} from './illustrations/MedEdgeIllustrations'
 
 const HighlightText = ({ text, query }) => {
   if (!query) return <>{text}</>;
@@ -289,20 +296,26 @@ function App() {
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 auto-rows-min">
 
           {/* Active Query Status (Wide) */}
-          <section className="col-span-1 md:col-span-2 lg:col-span-3 bg-white border border-surface-container-high rounded-[32px] p-8 md:p-10 shadow-sm">
-            <div className="flex justify-between items-start mb-10">
-              <div>
+          <section className="col-span-1 md:col-span-2 lg:col-span-3 bg-white border border-surface-container-high rounded-[32px] p-8 md:p-10 shadow-sm relative overflow-hidden">
+            <div className="pointer-events-none absolute -right-8 -top-8 h-40 w-40 rounded-full bg-primary-container/15 blur-2xl" aria-hidden />
+            <div className="flex flex-col gap-6 sm:flex-row sm:justify-between sm:items-start mb-10">
+              <div className="min-w-0 flex-1">
                 <h3 className="text-[22px] font-black text-on-background tracking-tight">
                   {searched ? `Result: "${query}"` : 'Awaiting Query'}
                 </h3>
-                <p className="text-sm text-on-surface-variant mt-2 font-medium">
+                <p className="text-sm text-on-surface-variant mt-2 font-medium max-w-xl">
                   {searched
                     ? compareMode ? 'Side-by-Side Comparison: Semantic vs Hybrid Fusion' : 'Hybrid Fusion Engine Response'
-                    : 'Enter keywords above to query the localized embedding space.'}
+                    : 'Run a query against your local vector index—semantic similarity plus keyword fusion, no cloud round-trip.'}
                 </p>
               </div>
+              {!searched && (
+                <div className="shrink-0 self-center sm:self-start">
+                  <IllustrationAwaitingQuery className="w-[200px] max-w-[42vw] sm:w-[220px] h-auto drop-shadow-sm" />
+                </div>
+              )}
               {searched && (
-                <span className={`text-[11px] font-extrabold px-3.5 py-1.5 rounded-xl uppercase tracking-[0.15em] flex items-center gap-1.5 border border-transparent ${loading ? 'bg-surface-container text-on-surface' : error ? 'bg-error-container/20 text-error border-error/20' : 'bg-secondary-container/40 text-secondary border-secondary/20'}`}>
+                <span className={`shrink-0 text-[11px] font-extrabold px-3.5 py-1.5 rounded-xl uppercase tracking-[0.15em] flex items-center gap-1.5 border border-transparent ${loading ? 'bg-surface-container text-on-surface' : error ? 'bg-error-container/20 text-error border-error/20' : 'bg-secondary-container/40 text-secondary border-secondary/20'}`}>
                   <span className="material-symbols-outlined text-[14px]">{loading ? 'autorenew' : error ? 'error' : 'check_circle'}</span>
                   {loading ? 'Processing' : error ? 'Error' : 'Complete'}
                 </span>
@@ -341,9 +354,7 @@ function App() {
           {/* Quick Filter (Tall) */}
           <section className="col-span-1 md:row-span-2 bg-white border border-surface-container-high rounded-[32px] p-8 shadow-sm flex flex-col">
             <div className="flex items-center gap-4 mb-10">
-              <div className="w-12 h-12 rounded-2xl bg-surface-container-low border border-surface-container-high flex items-center justify-center text-outline">
-                <span className="material-symbols-outlined text-[24px]">tune</span>
-              </div>
+              <IllustrationQueryFilters className="w-12 h-12 shrink-0 shadow-sm" />
               <h3 className="text-lg font-black text-on-background tracking-tight">Query Filters</h3>
             </div>
 
@@ -511,9 +522,12 @@ function App() {
 
           {/* Loading State */}
           {loading && (
-            <div className="col-span-1 md:col-span-2 lg:col-span-3 bg-white border border-surface-container-high rounded-[32px] p-16 flex flex-col items-center justify-center shadow-sm">
-              <span className="material-symbols-outlined text-[40px] text-primary/40 animate-spin mb-5">progress_activity</span>
-              <p className="font-extrabold text-on-background text-[18px]">
+            <div className="col-span-1 md:col-span-2 lg:col-span-3 bg-white border border-surface-container-high rounded-[32px] p-16 flex flex-col items-center justify-center shadow-sm gap-4">
+              <div className="flex items-center gap-6">
+                <IllustrationLoadingVectors className="w-24 h-20" />
+                <span className="material-symbols-outlined text-[36px] text-primary/50 animate-spin">progress_activity</span>
+              </div>
+              <p className="font-extrabold text-on-background text-[18px] text-center">
                 {compareMode ? 'Running dual queries: Semantic + Hybrid...' : 'Querying Vector Index...'}
               </p>
             </div>
@@ -521,12 +535,14 @@ function App() {
 
           {/* Empty State */}
           {searched && !loading && !error && !hasCompareResults && !hasNormalResults && (
-            <div className="col-span-1 md:col-span-2 lg:col-span-3 bg-surface-container-low border border-transparent rounded-[32px] p-16 flex flex-col items-center justify-center">
-              <div className="w-20 h-20 rounded-3xl bg-white border border-surface-container-high flex items-center justify-center mb-5">
-                <span className="material-symbols-outlined text-[40px] text-outline/40">search_off</span>
+            <div className="col-span-1 md:col-span-2 lg:col-span-3 bg-surface-container-low border border-surface-container-high/60 rounded-[32px] p-10 md:p-14 flex flex-col md:flex-row items-center justify-center gap-10 md:gap-14">
+              <IllustrationEmptyGuidelines className="w-full max-w-[220px] h-auto shrink-0 drop-shadow-md" />
+              <div className="text-center md:text-left">
+                <p className="font-black text-on-background text-[22px]">No matching guidelines found</p>
+                <p className="text-[15px] text-on-surface-variant font-medium mt-2 max-w-md">
+                  Broaden the search phrase, reset specialty and urgency to “All”, or confirm the vector index has ingested documents.
+                </p>
               </div>
-              <p className="font-black text-on-background text-[22px]">No matching guidelines found</p>
-              <p className="text-[15px] text-on-surface-variant font-medium mt-2">Try adjusting your filters or search terms.</p>
             </div>
           )}
 
@@ -554,12 +570,11 @@ function App() {
                 ))}
               </div>
 
-              <div className="w-full md:w-1/3 aspect-[21/9] rounded-2xl overflow-hidden relative border border-slate-700/40 flex flex-col items-center justify-center bg-black/60 shadow-inner">
-                <span className="material-symbols-outlined text-slate-300 text-[32px] mb-3">dns</span>
-                <p className="text-slate-200 text-[12px] font-black tracking-widest uppercase">Airgapped Server</p>
-                <div className="flex items-center gap-2 mt-3">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                  <p className="text-emerald-400/90 text-[11px] font-bold">0ms Network Latency</p>
+              <div className="w-full md:w-1/2 lg:w-2/5 rounded-2xl overflow-hidden relative border border-slate-700/50 bg-gradient-to-b from-[#121a1f] to-black/80 shadow-inner px-4 py-5 flex flex-col items-center justify-center min-h-[140px]">
+                <IllustrationAirgappedEdge className="w-full max-w-[300px] h-auto opacity-95" />
+                <div className="flex items-center gap-2 mt-2">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  <p className="text-emerald-400/90 text-[11px] font-bold tracking-wide">Airgapped · 0ms cloud latency</p>
                 </div>
               </div>
             </div>
