@@ -1,3 +1,11 @@
+import os
+
+# === CRITICAL: Force offline mode BEFORE importing any ML libraries ===
+# This prevents sentence-transformers / huggingface_hub from attempting
+# ANY network request on startup. Models MUST already be cached locally.
+os.environ["HF_HUB_OFFLINE"] = "1"
+os.environ["TRANSFORMERS_OFFLINE"] = "1"
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -5,8 +13,6 @@ from typing import List, Optional, Any, Dict
 from actian_vectorai import VectorAIClient, VectorParams, Distance, PointStruct, Field, FilterBuilder
 from sentence_transformers import SentenceTransformer
 import logging
-
-import os
 
 # Konfigurasi aplikasi & model
 app = FastAPI(
