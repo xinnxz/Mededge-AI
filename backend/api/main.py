@@ -24,7 +24,7 @@ app.add_middleware(
 )
 
 # Constants
-DB_HOST = os.getenv("VECTOR_DB_HOST", "localhost:50051")
+DB_HOST = os.getenv("VECTOR_DB_HOST", "127.0.0.1:50051")
 COLLECTION_NAME = "medical_knowledge"
 EMBEDDING_MODEL_NAME = "all-MiniLM-L6-v2"
 VECTOR_SIZE = 384

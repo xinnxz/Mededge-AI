@@ -42,7 +42,7 @@ function App() {
   const [hybridTime, setHybridTime] = useState(null)
 
   useEffect(() => {
-    fetch('http://localhost:8080/health')
+    fetch('http://127.0.0.1:8080/health')
       .then(res => res.json())
       .then(data => setDbStats({ connected: data.db_connected, totalDocs: data.total_docs || 0 }))
       .catch(() => setDbStats({ connected: false, totalDocs: 0 }))
@@ -50,7 +50,7 @@ function App() {
 
   const runSearch = async (useHybrid) => {
     const t0 = performance.now()
-    const res = await fetch('http://localhost:8080/api/search', {
+    const res = await fetch('http://127.0.0.1:8080/api/search', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ query, specialty, urgency, use_hybrid: useHybrid, limit: 5 })
@@ -115,7 +115,7 @@ function App() {
             ].map(p => {
               // Override query in closure
               const t0 = performance.now()
-              return fetch('http://localhost:8080/api/search', {
+              return fetch('http://127.0.0.1:8080/api/search', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ query: term, specialty, urgency, use_hybrid: p === runSearch(true), limit: 5 })
@@ -128,7 +128,7 @@ function App() {
             setResults([])
           } else {
             const t0 = performance.now()
-            const res = await fetch('http://localhost:8080/api/search', {
+            const res = await fetch('http://127.0.0.1:8080/api/search', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ query: term, specialty, urgency, use_hybrid: true, limit: 5 })
