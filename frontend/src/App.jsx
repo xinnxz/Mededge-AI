@@ -203,8 +203,8 @@ function App() {
       {/* Sidebar */}
       <nav className="hidden md:flex flex-col w-72 bg-white/90 backdrop-blur-3xl rounded-r-[32px] border-r border-surface-container-high z-40 fixed left-0 top-0 h-screen p-6 text-sm font-medium">
         <div className="flex items-center gap-4 mb-10 px-2 mt-4">
-          <div className="w-12 h-12 rounded-2xl bg-primary-container flex items-center justify-center shrink-0 border border-primary-container/50">
-            <span className="material-symbols-outlined icon-fill text-primary text-2xl">health_and_safety</span>
+          <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center shrink-0 border border-primary-container/50 overflow-hidden">
+            <img src="/logo.png" alt="MedEdge AI" className="w-full h-full object-contain" />
           </div>
           <div>
             <h1 className="text-[19px] font-extrabold text-sky-900 tracking-tight leading-tight">MedEdge AI</h1>
@@ -254,8 +254,8 @@ function App() {
         {/* Mobile Top Bar */}
         <div className="md:hidden flex justify-between items-center w-full bg-white/90 backdrop-blur-xl rounded-2xl mb-8 px-6 h-16 border border-surface-container-high">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl bg-primary-container flex items-center justify-center">
-              <span className="material-symbols-outlined icon-fill text-primary text-lg">health_and_safety</span>
+            <div className="w-8 h-8 rounded-xl bg-white border border-primary-container/40 flex items-center justify-center overflow-hidden">
+              <img src="/logo.png" alt="" className="w-full h-full object-contain" />
             </div>
             <span className="text-lg font-black text-sky-800 tracking-tight">MedEdge AI</span>
           </div>

@@ -1,4 +1,8 @@
-# 🏥 MedEdge AI
+<p align="center">
+  <img src="assets/logo.png" alt="MedEdge AI" width="160" />
+</p>
+
+# MedEdge AI
 
 **Offline-First Medical Knowledge Assistant powered by Actian VectorAI DB**
 
